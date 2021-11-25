@@ -36,7 +36,7 @@ def get_data(query: str) -> str:
         sys.exit(1)
     return resp
 
-def scrape_html(html_content: str) -> list[dict]:
+def scrape_html(html_content: str) -> list:
     """
     Scrapes the HTML content and creates a list of job postings structured as follows:
         job_posting = {
@@ -78,7 +78,7 @@ def scrape_html(html_content: str) -> list[dict]:
 
     return postings
 
-def publish_to_discord(postings: list[dict]) -> None:
+def publish_to_discord(postings: list) -> None:
     """
     Writes an embed to the defined discord webhook
 
