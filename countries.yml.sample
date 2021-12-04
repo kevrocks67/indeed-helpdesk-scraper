@@ -1,0 +1,5 @@
+---
+- country: "us"
+  webhook: "https://discord.com/api/webhooks/REPLACE_THIS"
+- country: "uk"
+  webhook: "https://discord.com/api/webhooks/REPLACE_THIS"

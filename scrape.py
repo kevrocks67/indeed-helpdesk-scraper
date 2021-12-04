@@ -4,31 +4,31 @@
 Title: Indeed Helpdesk Scraper
 Author: Kevin Diaz
 Description:
-    Scrapes entry level IT Support job postings throughout the entire US
+    Scrapes entry level IT Support job postings on indeed
 """
 
 import sys
 
 from bs4 import BeautifulSoup
 import requests
+import yaml
 
-try:
-    with open('webhook.txt', 'r') as hook_file:
-        HOOK = hook_file.read().strip()
-except FileNotFoundError:
-    print("No webhook found in webhook.txt")
-    sys.exit(1)
 
-def get_data(query: str) -> str:
+def get_data(query: str, country: str) -> str:
     """
     Make a query to indeed and retrieve the html data
 
     Args:
         query (str): The search query to be made on indeed
+        country (str): Country code for indeed
     Returns:
         resp (str): The html content of the response
     """
-    url = f"https://www.indeed.com/jobs?q={query}"
+    if country.lower() == 'us':
+        url = f"https://www.indeed.com/jobs?q={query}"
+    else:
+        url = f"https://{country}.indeed.com/jobs?q={query}"
+
     try:
         resp = requests.get(url).content
     except requests.ConnectionError as err:
@@ -78,15 +78,15 @@ def scrape_html(html_content: str) -> list:
 
     return postings
 
-def publish_to_discord(postings: list) -> None:
+def publish_to_discord(postings: list, webhook: str) -> None:
     """
-    Writes an embed to the defined discord webhook
+    Writes an embed to the the discord webhook provided
 
     Args:
         postings (list[dict]): A list of dictionaries which each contain information
                               about a job posting.
+        webhook (str): The discord webhook to which postings should be sent
     """
-
     for posting in postings:
         embed = {
               "content": "",
@@ -103,23 +103,31 @@ def publish_to_discord(postings: list) -> None:
               ]
             }
 
-        requests.post(HOOK, json=embed)
+        requests.post(webhook, json=embed)
 
         print(embed)
 
 def main():
     """
-    Gets data from indeed and executes the scraper on it
+    Loads config file, gets data from indeed, and executes the scraper on it
     """
+    try:
+        with open('countries.yml', 'r') as countries_file:
+            countries = yaml.safe_load(countries_file)
+    except FileNotFoundError:
+        print("No countries.yml file found")
+        sys.exit(1)
+
     query = "help%20desk%20OR%20it%20support%20OR%20desktop%20support&"\
-            "l=United%20States&"\
             "explvl=entry_level&"\
             "fromage=1&"\
             "jt=fulltime&"\
             "limit=50"
-    raw_content = get_data(query)
-    postings = scrape_html(raw_content)
-    publish_to_discord(postings)
+
+    for country in countries:
+        raw_content = get_data(query, country['country'])
+        postings = scrape_html(raw_content)
+        publish_to_discord(postings, country['webhook'])
 
 if __name__ == "__main__":
     main()
