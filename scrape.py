@@ -121,13 +121,21 @@ def main():
         print("No countries.yml file found")
         sys.exit(1)
 
-    query = "help%20desk%20OR%20it%20support%20OR%20desktop%20support&"\
-            "explvl=entry_level&"\
-            "fromage=1&"\
-            "jt=fulltime&"\
-            "limit=50"
-
     for country in countries:
+        search_query = ""
+
+        for idx, search_key in enumerate(country['search_keys'], start=1):
+            if idx < len(country['search_keys']):
+                search_query += f"%22{search_key}%22%20OR"
+            else:
+                search_query += f"%22{search_key}%22&"
+
+        query = search_query + \
+                "explvl=entry_level&"\
+                "fromage=1&"\
+                "jt=fulltime&"\
+                "limit=50"
+
         raw_content = get_data(query, country['country'])
         postings = scrape_html(raw_content)
         publish_to_discord(postings, country['webhook'])
