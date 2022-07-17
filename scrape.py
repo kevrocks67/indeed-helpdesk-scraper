@@ -55,13 +55,16 @@ def scrape_html(html_content: str) -> list:
     postings = []
 
     soup= BeautifulSoup(html_content, 'html.parser')
-    jobs = soup.findAll('a', class_='tapItem')
+    jobs = soup.findAll('div', class_='tapItem')
 
     for job in jobs:
         job_content = job.find('td', class_='resultContent')
         job_metadata = job_content.find('div', class_="metadata")
 
-        job_title_spans = job_content.find(class_='jobTitle').find_all('span')
+        job_title_header = job_content.find(class_='jobTitle')
+        job_title_spans = job_title_header.find_all('span')
+        job_key = job_title_header.contents[-1]['data-jk']
+
         if job_title_spans[0].text == 'new':
             job_title = job_title_spans[1].text
         else:
@@ -69,7 +72,7 @@ def scrape_html(html_content: str) -> list:
 
         postings.append({
                          "title": job_title,
-                         "link": f"https://indeed.com/viewjob?jk={job['data-jk']}",
+                         "link": f"https://indeed.com/viewjob?jk={job_key}",
                          "company": job_content.find(class_='companyName').text,
                          "location": job_content.find(class_='companyLocation').text,
                          "job_type": "Full Time",
