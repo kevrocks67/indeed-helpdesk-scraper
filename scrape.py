@@ -13,6 +13,32 @@ from bs4 import BeautifulSoup
 import requests
 import yaml
 
+def create_search_query(search_keys: list) -> str:
+    """
+    Generates a URL encoded search query to be passed
+    to indeed
+
+    Args:
+        search_keys (list[str]): Contains terms that will
+        be searched for on indeed
+    Returns:
+        search_query (str): The URL encoded search string
+        to be appended to the indeed URL.
+    """
+    search_query = ""
+
+    for idx, search_key in enumerate(search_keys, start=1):
+        if idx < len(search_keys):
+            search_query += f"%22{search_key}%22%20OR"
+        else:
+            search_query += f"%22{search_key}%22&"
+
+    search_query += \
+        "explvl=entry_level&"\
+        "fromage=1&"\
+        "jt=fulltime&"\
+        "limit=50"
+    return search_query
 
 def get_data(query: str, country: str) -> str:
     """
@@ -122,21 +148,8 @@ def main():
         sys.exit(1)
 
     for country in countries:
-        search_query = ""
-
-        for idx, search_key in enumerate(country['search_keys'], start=1):
-            if idx < len(country['search_keys']):
-                search_query += f"%22{search_key}%22%20OR"
-            else:
-                search_query += f"%22{search_key}%22&"
-
-        query = search_query + \
-                "explvl=entry_level&"\
-                "fromage=1&"\
-                "jt=fulltime&"\
-                "limit=50"
-
-        raw_content = get_data(query, country['country'])
+        search_query = create_search_query(country['search_keys'])
+        raw_content = get_data(search_query, country['country'])
         postings = scrape_html(raw_content)
         publish_to_discord(postings, country['webhook'])
 
