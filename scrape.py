@@ -56,7 +56,8 @@ def get_data(query: str, country: str) -> str:
         url = f"https://{country}.indeed.com/jobs?q={query}"
 
     try:
-        resp = requests.get(url).content
+        headers = {"User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/107.0"}
+        resp = requests.get(url, headers=headers).content
     except requests.ConnectionError as err:
         print("Could not connect: ", err)
         sys.exit(1)
